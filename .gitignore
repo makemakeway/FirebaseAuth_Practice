@@ -2,9 +2,13 @@
 #
 # gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
 
+<<<<<<< HEAD
 
 API.swift
+GoogleService-Info.plist
 
+=======
+>>>>>>> 1c68ab9c35d4d14efd0d71c04abaa81145114b57
 ## User settings
 xcuserdata/
 
