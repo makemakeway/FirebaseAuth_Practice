@@ -16,27 +16,103 @@ class ViewController: UIViewController {
     
     
     //MARK: UI
-    let button = UIButton()
+    let phoneNumberTextField = UITextField()
+    let verificationNumberTextField = UITextField()
+    let requestButton = UIButton()
+    let verificationButton = UIButton()
     
     
     //MARK: Method
     @objc func buttonClicked(_ sender: UIButton) {
+        let text = phoneNumberTextField.text ?? ""
         PhoneAuthProvider.provider()
-            .verifyPhoneNumber("+82 1076071339", uiDelegate: nil)
+            .verifyPhoneNumber("+82 \(text)", uiDelegate: nil) { [weak self](verificationID, error) in
+                guard let self = self else { return }
+                if let id = verificationID {
+                    UserDefaults.standard.set("\(id)", forKey: "verificationID")
+                }
+                if let error = error {
+                    print(error.localizedDescription)
+                    return
+                }
+            }
+    }
+    
+    @objc func verificationButtonClicked(_ sender: UIButton) {
+        guard let verificationID = UserDefaults.standard.string(forKey: "verificationID"), let verificationCode = verificationNumberTextField.text else {
+            return
+        }
+        
+        let credential = PhoneAuthProvider.provider().credential(
+            withVerificationID: verificationID,
+            verificationCode: verificationCode
+        )
+        
+        logIn(credential: credential)
+    }
+    
+    func logIn(credential: PhoneAuthCredential) {
+        Auth.auth().signIn(with: credential) { authResult, error in
+            if let error = error {
+                print(error.localizedDescription)
+                print("LogIn Failed...")
+            }
+            print("LogIn Success!!")
+            print("\(authResult!)")
+        }
     }
     
     func setUp() {
-        self.view.addSubview(button)
-        button.backgroundColor = .systemBlue
-        button.setTitle("요청", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.addTarget(self, action: #selector(buttonClicked(_:)), for: .touchUpInside)
+        self.view.addSubview(requestButton)
+        requestButton.backgroundColor = .systemBlue
+        requestButton.setTitle("인증번호 요청", for: .normal)
+        requestButton.setTitleColor(.white, for: .normal)
+        requestButton.addTarget(self, action: #selector(buttonClicked(_:)), for: .touchUpInside)
+        
+        self.view.addSubview(phoneNumberTextField)
+        phoneNumberTextField.keyboardType = .numberPad
+        phoneNumberTextField.backgroundColor = .white
+        phoneNumberTextField.placeholder = "전화번호 입력"
+        phoneNumberTextField.textColor = .black
+        
+        self.view.addSubview(verificationNumberTextField)
+        verificationNumberTextField.backgroundColor = .white
+        verificationNumberTextField.textColor = .black
+        verificationNumberTextField.keyboardType = .numberPad
+        verificationNumberTextField.placeholder = "인증번호 입력"
+        
+        self.view.addSubview(verificationButton)
+        verificationButton.backgroundColor = .systemBlue
+        verificationButton.setTitle("인증번호 확인", for: .normal)
+        verificationButton.setTitleColor(.white, for: .normal)
+        verificationButton.addTarget(self, action: #selector(verificationButtonClicked(_:)), for: .touchUpInside)
     }
     
     func setConstrains() {
-        button.snp.makeConstraints { make in
-            make.size.equalTo(50)
-            make.center.equalToSuperview()
+        requestButton.snp.makeConstraints { make in
+            make.height.equalTo(50)
+            make.width.equalTo(100)
+            make.centerY.equalToSuperview()
+            make.leading.equalToSuperview().offset(20)
+        }
+        phoneNumberTextField.snp.makeConstraints { make in
+            make.bottom.equalTo(requestButton.snp.top).offset(-20)
+            make.leading.equalToSuperview().offset(20)
+            make.trailing.equalToSuperview().offset(-20)
+            make.height.equalTo(48)
+        }
+        verificationNumberTextField.snp.makeConstraints { make in
+            make.top.equalTo(requestButton.snp.bottom).offset(20)
+            make.leading.equalToSuperview().offset(20)
+            make.trailing.equalToSuperview().offset(-20)
+            make.height.equalTo(48)
+        }
+        
+        verificationButton.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().offset(-20)
+            make.height.equalTo(50)
+            make.width.equalTo(100)
+            make.centerY.equalToSuperview()
         }
     }
     
